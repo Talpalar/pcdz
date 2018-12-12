@@ -16,6 +16,11 @@ received_path = config["Path"]
 appPath = ".\\"
 logZ = replayLogger.Logger(appPath, "pcdMeta")
 
+
+def get_real_path(r_fgc, path):
+	return os.path.join('\\\\', r_fgc, 'D$\events', path)
+
+
 master_list = []
 # received_path = "C:\Users\mikeyt\Desktop\ProjectMeta"
 DYNAMIC_INIS_BACKUP_PATH = os.path.join(received_path, 'DynamicINIsBackup')
@@ -28,6 +33,23 @@ XGEN_SEED_ZONE_B_PATH = os.path.join(received_path, 'XGEN_SEED_ZONE_B')
 XGEN_SKY_CAM_FILTERED_PCD_PATH = os.path.join(received_path, 'XGEN_SKY_CAM_FILTERED_PCD')
 XGEN_SKY_CAM_PCD_PATH = os.path.join(received_path, 'XGEN_SKY_CAM_PCD')
 
+tmp_path_computer = os.path.join(received_path, 'ParametersBackup\ComputerParameters.xml')
+tmp_path_site = os.path.join(received_path, 'ParametersBackup\SiteParameters.xml')
+
+print(get_real_path('nav', tmp_path_computer))
+print(get_real_path('nav', tmp_path_site))
+
+computer_parameters_xml = minidom.parse(get_real_path('nav', tmp_path_computer))
+site_parameters =  minidom.parse(get_real_path('nav', tmp_path_site))
+
+
+site_parameter_list = site_parameters.getElementsByTagName('Parameter')
+params_list = computer_parameters_xml.getElementsByTagName('Parameter')
+
+for param in site_parameter_list:
+	if param.attributes['ParameterName'].value == "VenueInformation":
+		venue = param.attributes['ParameterValue'].value
+
 list_of_main_filtered = []
 list_of_outside_filtered = []
 list_of_skycam_filtered = []
@@ -39,41 +61,33 @@ list_of_INIs_lowerbody = []
 list_of_INIs_skycam = []
 list_of_INIs_goalkeeper = []
 
-for file1 in os.listdir(XGEN_MAIN_FILTERED_PCD_PATH):
-	if file1.endswith(".pcd"):
-		list_of_main_filtered.append(file1)
-for file1 in os.listdir(XGEN_OUTSIDE_FILTERED_PCD_PATH):
-	if file1.endswith(".pcd"):
-		list_of_outside_filtered.append(file1)
-for file1 in os.listdir(XGEN_SKY_CAM_FILTERED_PCD_PATH):
-	if file1.endswith(".pcd"):
-		list_of_skycam_filtered.append(file1)
 
-for file1 in os.listdir(DYNAMIC_INIS_BACKUP_PATH):
-	if file1.endswith(".ini"):
-		if file1.startswith("main0"):
-			list_of_INIs_main.append(file1)
-		elif file1.startswith("MiddleCloud"):
-			list_of_INIs_middle.append(file1)
-		elif file1.startswith("outside"):
-			list_of_INIs_outside.append(file1)
-		elif file1.startswith("lowerbody0"):
-			list_of_INIs_lowerbody.append(file1)
-		elif file1.startswith("skycam0"):
-			list_of_INIs_skycam.append(file1)
-		elif file1.startswith("GoalKeeper0"):
-			list_of_INIs_goalkeeper.append(file1)
+def setting_lists_per_computer(fgc):
 
-# ALL OF THESE PATHS SHOULD BE EVENTUALLY COMPATIBLE WITH THE SYSTEM ##########################
-clip_parameters_xml = minidom.parse(os.path.join(received_path, 'ParametersBackup\ComputerParameters.xml'))
-site_parameters = minidom.parse(os.path.join(received_path, 'ParametersBackup\SiteParameters.xml'))
+	for file1 in os.listdir(get_real_path(fgc, XGEN_MAIN_FILTERED_PCD_PATH)):
+		if file1.endswith(".pcd"):
+			list_of_main_filtered.append(file1)
+	for file1 in os.listdir(get_real_path(fgc, XGEN_OUTSIDE_FILTERED_PCD_PATH)):
+		if file1.endswith(".pcd"):
+			list_of_outside_filtered.append(file1)
+	for file1 in os.listdir(get_real_path(fgc, XGEN_SKY_CAM_FILTERED_PCD_PATH)):
+		if file1.endswith(".pcd"):
+			list_of_skycam_filtered.append(file1)
 
-site_parameter_list = site_parameters.getElementsByTagName('Parameter')
-params_list = clip_parameters_xml.getElementsByTagName('Parameter')
-
-for param in site_parameter_list:
-	if param.attributes['ParameterName'].value == "VenueInformation":
-		venue = param.attributes['ParameterValue'].value
+	for file1 in os.listdir(get_real_path(fgc, DYNAMIC_INIS_BACKUP_PATH)):
+		if file1.endswith(".ini"):
+			if file1.startswith("main0"):
+				list_of_INIs_main.append(file1)
+			elif file1.startswith("MiddleCloud"):
+				list_of_INIs_middle.append(file1)
+			elif file1.startswith("outside"):
+				list_of_INIs_outside.append(file1)
+			elif file1.startswith("lowerbody0"):
+				list_of_INIs_lowerbody.append(file1)
+			elif file1.startswith("skycam0"):
+				list_of_INIs_skycam.append(file1)
+			elif file1.startswith("GoalKeeper0"):
+				list_of_INIs_goalkeeper.append(file1)
 
 
 # content must begin with '#'
@@ -99,9 +113,9 @@ def write_to_file(file_path, content):
 	logZ.info(file_path + " created, with metadata!")
 	logZ.info(new_file + " original file backed up")
 
-
-def read_from_ini(ini_file):
-	path_to_ini = os.path.join(DYNAMIC_INIS_BACKUP_PATH, ini_file)
+# add to the calls for this function the FGC
+def read_from_ini(fgc, ini_file):
+	path_to_ini = get_real_path(fgc, os.path.join(DYNAMIC_INIS_BACKUP_PATH, ini_file))
 	f = open(path_to_ini, 'r')
 	lst = []
 	for line in f:
@@ -249,54 +263,61 @@ lowern = 0
 gkn = 0
 outn = 0
 skyn = 0
-for pcd in list_of_main_filtered:
-	if is_pcd_middle(pcd):
-		t = read_from_ini(list_of_INIs_middle[mid])
-		write_to_file(os.path.join(XGEN_MAIN_FILTERED_PCD_PATH, pcd), "#Arena: " + venue + "\n" + "#Path to frame: "
-					  + received_path + "\n" + "#Created by computer: " + str(middleZ[mid]) +
-					  "\n" + "#Created by INI file: " + str(list_of_INIs_middle[mid]) + "\n"
-					  + t[0] + t[1])
-		if mid < middleZ.__len__() - 1:
-			mid += 1
-	elif mainn < mainZ.__len__() and number_of_pcd(pcd) == number_of_fgc(mainZ[mainn]):
-		t = read_from_ini(list_of_INIs_main[mainn])
-		write_to_file(os.path.join(XGEN_MAIN_FILTERED_PCD_PATH, pcd), "#Arena: " + venue + "\n" + "#Path to frame: "
-					  + received_path + "\n" + "#Created by computer: " + str(mainZ[mainn]) +
-					  "\n" + "#Created by INI file: " + str(list_of_INIs_main[mainn]) + "\n"
-					  + t[0] + t[1])
-		mainn += 1
-	elif lowern < lowerbodyZ.__len__() and number_of_pcd(pcd) == number_of_fgc(lowerbodyZ[lowern]):
-		t = read_from_ini(list_of_INIs_lowerbody[lowern])
-		write_to_file(os.path.join(XGEN_MAIN_FILTERED_PCD_PATH, pcd), "#Arena: " + venue + "\n" + "#Path to frame: "
-					  + received_path + "\n" + "#Created by computer: " + str(lowerbodyZ[lowern]) +
-					  "\n" + "#Created by INI file: " + str(list_of_INIs_lowerbody[lowern]) + "\n"
-					  + t[0] + t[1])
-		lowern += 1
-	else:
-		for gkn in range(0, goalZ.__len__()):
-			if number_of_pcd(pcd) == number_of_fgc(goalZ[gkn]):
-				t = read_from_ini(list_of_INIs_goalkeeper[gkn])
-				write_to_file(os.path.join(XGEN_MAIN_FILTERED_PCD_PATH, pcd),
-							  "#Arena: " + venue + "\n" + "#Path to frame: "
-							  + received_path + "\n" + "#Created by computer: " + str(goalZ[gkn]) +
-							  "\n" + "#Created by INI file: " + str(list_of_INIs_goalkeeper[gkn]) + "\n"
-							  + t[0] + t[1])
 
-for pcd in list_of_outside_filtered:
-	if outn < outsideZ.__len__() and number_of_pcd(pcd) == number_of_fgc(outsideZ[outn]):
-		t = read_from_ini(list_of_INIs_outside[outn])
-		write_to_file(os.path.join(XGEN_OUTSIDE_FILTERED_PCD_PATH, pcd), "#Arena: " + venue + "\n" + "#Path to frame: "
-					  + received_path + "\n" + "#Created by computer: " + str(outsideZ[outn]) +
-					  "\n" + "#Created by INI file: " + str(list_of_INIs_outside[outn]) + "\n"
-					  + t[0] + t[1])
-		outn += 1
-
-for pcd in list_of_skycam_filtered:
-	for skyn in range(0, skycamZ.__len__()):
-		if skyn < skycamZ.__len__() and number_of_pcd(pcd) == number_of_fgc(skycamZ[skyn]):
-			t = read_from_ini(list_of_INIs_skycam[skyn])
-			write_to_file(os.path.join(XGEN_SKY_CAM_FILTERED_PCD_PATH, pcd),
-						  "#Arena: " + venue + "\n" + "#Path to frame: "
-						  + received_path + "\n" + "#Created by computer: " + str(skycamZ[skyn]) +
-						  "\n" + "#Created by INI file: " + str(list_of_INIs_skycam[skyn]) + "\n"
+for r_computer in renderZ:
+	print(get_real_path(r_computer, os.path.join(XGEN_MAIN_FILTERED_PCD_PATH, pcd)))
+	for pcd in list_of_main_filtered:
+		if is_pcd_middle(pcd):
+			t = read_from_ini(r_computer, list_of_INIs_middle[mid])
+			write_to_file(get_real_path(r_computer, os.path.join(XGEN_MAIN_FILTERED_PCD_PATH, pcd)), "#Arena: " +
+						  venue + "\n" + "#Path to frame: "
+						  + received_path + "\n" + "#Created by computer: " + str(middleZ[mid]) +
+						  "\n" + "#Created by INI file: " + str(list_of_INIs_middle[mid]) + "\n"
 						  + t[0] + t[1])
+			if mid < middleZ.__len__() - 1:
+				mid += 1
+		elif mainn < mainZ.__len__() and number_of_pcd(pcd) == number_of_fgc(mainZ[mainn]):
+			t = read_from_ini(r_computer, list_of_INIs_main[mainn])
+			write_to_file(get_real_path(r_computer, os.path.join(XGEN_MAIN_FILTERED_PCD_PATH, pcd)), "#Arena: " +
+						  venue + "\n" + "#Path to frame: "
+						  + received_path + "\n" + "#Created by computer: " + str(mainZ[mainn]) +
+						  "\n" + "#Created by INI file: " + str(list_of_INIs_main[mainn]) + "\n"
+						  + t[0] + t[1])
+			mainn += 1
+		elif lowern < lowerbodyZ.__len__() and number_of_pcd(pcd) == number_of_fgc(lowerbodyZ[lowern]):
+			t = read_from_ini(r_computer, list_of_INIs_lowerbody[lowern])
+			write_to_file(get_real_path(r_computer, os.path.join(XGEN_MAIN_FILTERED_PCD_PATH, pcd)), "#Arena: " +
+						  venue + "\n" + "#Path to frame: "
+						  + received_path + "\n" + "#Created by computer: " + str(lowerbodyZ[lowern]) +
+						  "\n" + "#Created by INI file: " + str(list_of_INIs_lowerbody[lowern]) + "\n"
+						  + t[0] + t[1])
+			lowern += 1
+		else:
+			for gkn in range(0, goalZ.__len__()):
+				if number_of_pcd(pcd) == number_of_fgc(goalZ[gkn]):
+					t = read_from_ini(r_computer, list_of_INIs_goalkeeper[gkn])
+					write_to_file(get_real_path(r_computer, os.path.join(XGEN_MAIN_FILTERED_PCD_PATH, pcd)),
+								  "#Arena: " + venue + "\n" + "#Path to frame: "
+								  + received_path + "\n" + "#Created by computer: " + str(goalZ[gkn]) +
+								  "\n" + "#Created by INI file: " + str(list_of_INIs_goalkeeper[gkn]) + "\n"
+								  + t[0] + t[1])
+
+	for pcd in list_of_outside_filtered:
+		if outn < outsideZ.__len__() and number_of_pcd(pcd) == number_of_fgc(outsideZ[outn]):
+			t = read_from_ini(r_computer, list_of_INIs_outside[outn])
+			write_to_file(get_real_path(r_computer, os.path.join(XGEN_OUTSIDE_FILTERED_PCD_PATH, pcd)), "#Arena: " +
+						  venue + "\n" + "#Path to frame: "
+						  + received_path + "\n" + "#Created by computer: " + str(outsideZ[outn]) +
+						  "\n" + "#Created by INI file: " + str(list_of_INIs_outside[outn]) + "\n"
+						  + t[0] + t[1])
+			outn += 1
+
+	for pcd in list_of_skycam_filtered:
+		for skyn in range(0, skycamZ.__len__()):
+			if skyn < skycamZ.__len__() and number_of_pcd(pcd) == number_of_fgc(skycamZ[skyn]):
+				t = read_from_ini(r_computer, list_of_INIs_skycam[skyn])
+				write_to_file(get_real_path(r_computer, os.path.join(XGEN_SKY_CAM_FILTERED_PCD_PATH, pcd)),
+							  "#Arena: " + venue + "\n" + "#Path to frame: "
+							  + received_path + "\n" + "#Created by computer: " + str(skycamZ[skyn]) +
+							  "\n" + "#Created by INI file: " + str(list_of_INIs_skycam[skyn]) + "\n"
+							  + t[0] + t[1])
