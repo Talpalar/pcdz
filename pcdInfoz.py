@@ -65,8 +65,8 @@ for file1 in os.listdir(DYNAMIC_INIS_BACKUP_PATH):
 			list_of_INIs_goalkeeper.append(file1)
 
 # ALL OF THESE PATHS SHOULD BE EVENTUALLY COMPATIBLE WITH THE SYSTEM ##########################
-clip_parameters_xml = minidom.parse(os.path.join('C:\Users\mikeyt\Desktop\ProjectMeta\ComputerParameters.xml'))
-site_parameters = minidom.parse(os.path.join('C:\Users\mikeyt\Desktop\ProjectMeta\SiteParameters.xml'))
+clip_parameters_xml = minidom.parse(os.path.join(received_path, 'ParametersBackup\ComputerParameters.xml'))
+site_parameters = minidom.parse(os.path.join(received_path, 'ParametersBackup\SiteParameters.xml'))
 
 site_parameter_list = site_parameters.getElementsByTagName('Parameter')
 params_list = clip_parameters_xml.getElementsByTagName('Parameter')
@@ -242,9 +242,6 @@ def make_master_list():
 
 
 master_list = make_master_list()
-
-# for pcdz in list_of_main_filtered:
-# 	print ("isMiddle", is_pcd_middle(pcdz), number_of_pcd(pcdz))
 
 mid = 0
 mainn = 0
