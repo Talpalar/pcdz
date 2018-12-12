@@ -2,17 +2,16 @@ import sys
 import glob
 import math
 import os
-import ConfigParser
 from xml.dom import minidom
 import replayLogger
 import configReader
 
-config2 = configReader.read_config(".\\folderPath.ini")
-received_path = config2.get_line("Path")
-print(received_path)
-config = ConfigParser.ConfigParser()
-config.read(".\\folderPath.ini")
-# received_path = config.get('Default', 'Path')
+config = configReader.read_config(".\\folderPath.ini")
+
+if config is None:
+	raise Exception("Cannot parse config file")
+
+received_path = config["Path"]
 
 appPath = ".\\"
 logZ = replayLogger.Logger(appPath, "pcdMeta")
