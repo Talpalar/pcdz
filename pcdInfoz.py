@@ -63,6 +63,16 @@ list_of_INIs_goalkeeper = []
 
 
 def setting_lists_per_computer(fgc):
+	del list_of_main_filtered[:]
+	del list_of_outside_filtered[:]
+	del list_of_skycam_filtered[:]
+
+	del list_of_INIs_main[:]
+	del list_of_INIs_middle[:]
+	del list_of_INIs_outside[:]
+	del list_of_INIs_lowerbody[:]
+	del list_of_INIs_skycam[:]
+	del list_of_INIs_goalkeeper[:]
 
 	for file1 in os.listdir(get_real_path(fgc, XGEN_MAIN_FILTERED_PCD_PATH)):
 		if file1.endswith(".pcd"):
@@ -121,6 +131,7 @@ def write_to_file(file_path, content):
 
 	logZ.info(file_path + " created, with metadata!")
 	logZ.info(new_file + " original file backed up")
+
 
 # add to the calls for this function the FGC
 def read_from_ini(fgc, ini_file):
@@ -211,19 +222,20 @@ def get_computers(computer_group):
 
 
 renderZ = get_computers("RenderComputers")
-logZ.info( "RenderComputers:" + renderZ)
+logZ.info( "RenderComputers:" + ', '.join(map(str, renderZ)))
 mainZ = get_computers("XgenMainComputers")
-logZ.info( "XgenMainComputers:" + mainZ)
+logZ.info( "XgenMainComputers:" + ', '.join(map(str, mainZ)))
 lowerbodyZ = get_computers("XgenLowerBodyComputers")
-logZ.info( "XgenLowerBodyComputers:" + lowerbodyZ)
+logZ.info( "XgenLowerBodyComputers:" + ', '.join(map(str, lowerbodyZ)))
 middleZ = get_computers("MiddleComputers")
-logZ.info( "MiddleComputers:" + middleZ)
+logZ.info( "MiddleComputers:" + ', '.join(map(str, middleZ)))
 outsideZ = get_computers("XgenOutsideComputers")
-logZ.info( "MiddleComputers:" + outsideZ)
+logZ.info( "MiddleComputers:" + ', '.join(map(str, outsideZ)))
 skycamZ = get_computers("XgenSkyCamComputers")
-logZ.info( "XgenSkyCamComputers:" + outsideZ)
+logZ.info( "XgenSkyCamComputers:" + ', '.join(map(str, skycamZ)))
 goalZ = get_computers("XgenGoalKeeperComputers")
-logZ.info( "XgenGoalKeeperComputers:" + goalZ)
+logZ.info( "XgenGoalKeeperComputers:" + ', '.join(map(str, goalZ)))
+
 
 if lowerbodyZ.__len__() == 0:
 	logZ.warn("There aren't any XgenLowerBodyComputers")
@@ -263,7 +275,12 @@ master_list = make_master_list()
 
 
 for r_computer in renderZ:
-
+	mid = 0
+	mainn = 0
+	lowern = 0
+	gkn = 0
+	outn = 0
+	skyn = 0
 	setting_lists_per_computer(r_computer)
 	for pcd in list_of_main_filtered:
 		if is_pcd_middle(pcd):
