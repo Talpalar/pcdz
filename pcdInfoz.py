@@ -89,6 +89,15 @@ def setting_lists_per_computer(fgc):
 			elif file1.startswith("GoalKeeper0"):
 				list_of_INIs_goalkeeper.append(file1)
 
+	if list_of_main_filtered.__len__() == 0:
+		logZ.warn("There aren't any main PCDs")
+
+	if list_of_outside_filtered.__len__() == 0:
+		logZ.warn("There aren't any outside PCDs")
+
+	if list_of_skycam_filtered.__len__() == 0:
+		logZ.warn("There aren't any skyCam PCDs")
+
 
 # content must begin with '#'
 def write_to_file(file_path, content):
@@ -202,18 +211,19 @@ def get_computers(computer_group):
 
 
 renderZ = get_computers("RenderComputers")
-
+logZ.info( "RenderComputers:" + renderZ)
 mainZ = get_computers("XgenMainComputers")
-
+logZ.info( "XgenMainComputers:" + mainZ)
 lowerbodyZ = get_computers("XgenLowerBodyComputers")
-
+logZ.info( "XgenLowerBodyComputers:" + lowerbodyZ)
 middleZ = get_computers("MiddleComputers")
-
+logZ.info( "MiddleComputers:" + middleZ)
 outsideZ = get_computers("XgenOutsideComputers")
-
+logZ.info( "MiddleComputers:" + outsideZ)
 skycamZ = get_computers("XgenSkyCamComputers")
-
+logZ.info( "XgenSkyCamComputers:" + outsideZ)
 goalZ = get_computers("XgenGoalKeeperComputers")
+logZ.info( "XgenGoalKeeperComputers:" + goalZ)
 
 if lowerbodyZ.__len__() == 0:
 	logZ.warn("There aren't any XgenLowerBodyComputers")
@@ -224,12 +234,6 @@ if skycamZ.__len__() == 0:
 if goalZ.__len__() == 0:
 	logZ.warn("There aren't any XgenGoalKeeperComputers")
 
-if list_of_main_filtered.__len__() == 0:
-	logZ.warn("There aren't any main PCDs")
-if list_of_outside_filtered.__len__() == 0:
-	logZ.warn("There aren't any outside PCDs")
-if list_of_skycam_filtered.__len__() == 0:
-	logZ.warn("There aren't any skyCam PCDs")
 
 def make_master_list():
 	i = 1
@@ -257,15 +261,10 @@ def make_master_list():
 
 master_list = make_master_list()
 
-mid = 0
-mainn = 0
-lowern = 0
-gkn = 0
-outn = 0
-skyn = 0
 
 for r_computer in renderZ:
-	print(get_real_path(r_computer, os.path.join(XGEN_MAIN_FILTERED_PCD_PATH, pcd)))
+
+	setting_lists_per_computer(r_computer)
 	for pcd in list_of_main_filtered:
 		if is_pcd_middle(pcd):
 			t = read_from_ini(r_computer, list_of_INIs_middle[mid])
